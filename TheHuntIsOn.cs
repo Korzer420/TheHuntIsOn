@@ -1,16 +1,19 @@
 ﻿using KorzUtils.Helper;
 using Modding;
 using Satchel.BetterMenus;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using TheHuntIsOn.Modules;
 using TheHuntIsOn.Modules.HealthModules;
+using TheHuntIsOn.Modules.PauseModule;
 using UnityEngine;
 
 namespace TheHuntIsOn;
 
-public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenuMod
+public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ILocalSettings<HuntLocalSaveData>, ICustomMenuMod
 {
     #region Constructors
 
@@ -27,7 +30,9 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
 
     public static TheHuntIsOn Instance { get; set; }
 
-    public static HuntGlobalSaveData SaveData { get; set; } = new();
+    public static HuntGlobalSaveData GlobalSaveData { get; set; } = new();
+
+    public static HuntLocalSaveData LocalSaveData { get; set; } = new();
 
     public bool ToggleButtonInsideMenu { get; }
 
@@ -52,6 +57,7 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
         new LifeseedModule(),
         new MaskModule(),
         new NotchModule(),
+        new PauseTimerModule(),
         new RespawnModule(),
         new ShadeModule(),
         new ShadeSkipModule(),
@@ -79,7 +85,8 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
 
     public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
-        SetupHKMP();
+        Modules.ForEach(m => m.Initialize());
+
         On.UIManager.StartNewGame += UIManager_StartNewGame;
         On.UIManager.ContinueGame += UIManager_ContinueGame;
         On.UIManager.ReturnToMainMenu += UIManager_ReturnToMainMenu;
@@ -90,13 +97,6 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
         BossModule.STDreamEnter = preloadedObjects["Ruins1_24_boss_defeated"]["Mage Lord Remains/Dream Enter"];
         BossModule.HKDreamEnter = preloadedObjects["Room_Final_Boss_Core"]["Boss Control/Hollow Knight Boss/Dream Enter"];
         BossModule.DreamTree = preloadedObjects["Crossroads_07"]["Dream Plant"];
-    }
-
-    private void SetupHKMP()
-    {
-        // Some funky code to get the EventNetworkModule from the list of modules
-        // Alternatively, the EventNetworkModule could be stored in the class
-        ((EventNetworkModule)Modules.Find(module => module.GetType() == typeof(EventNetworkModule))).Initialize();
     }
     
     #endregion
@@ -129,14 +129,14 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
     private void PlayerDataBoolTest_OnEnter(On.HutongGames.PlayMaker.Actions.PlayerDataBoolTest.orig_OnEnter orig, HutongGames.PlayMaker.Actions.PlayerDataBoolTest self)
     {
         if (self.IsCorrectContext("Spell Control", "Knight", "Slug?"))
-            if (SaveData.IsHunter)
-                self.Fsm.Variables.FindFsmFloat("Time Per MP Drain").Value *= SaveData.FocusSpeed;
+            if (GlobalSaveData.IsHunter)
+                self.Fsm.Variables.FindFsmFloat("Time Per MP Drain").Value *= GlobalSaveData.FocusSpeed;
             else
                 self.Fsm.Variables.FindFsmFloat("Time Per MP Drain").Value *= 1;
-        else if (SaveData.IsHunter &&
+        else if (GlobalSaveData.IsHunter &&
                 ((self.IsCorrectContext("Spell Control", "Knight", "Spore Cloud") || self.IsCorrectContext("Spell Control", "Knight", "Spore Cloud 2"))))
-            HeroController.instance.TakeMP(SaveData.FocusCost - 33);
-        else if (SaveData.IsHunter &&
+            HeroController.instance.TakeMP(GlobalSaveData.FocusCost - 33);
+        else if (GlobalSaveData.IsHunter &&
                 (self.IsCorrectContext("Spell Control", "Knight", "Fireball 1") ||
                  self.IsCorrectContext("Spell Control", "Knight", "Fireball 2") ||
                  self.IsCorrectContext("Spell Control", "Knight", "Level Check 2") ||
@@ -144,9 +144,9 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
                  self.IsCorrectContext("Spell Control", "Knight", "Scream Burst 2")))
         {
             if (!PlayerData.instance.equippedCharm_33)
-                HeroController.instance.TakeMP(SaveData.SpellCost - 33);
+                HeroController.instance.TakeMP(GlobalSaveData.SpellCost - 33);
             else
-                HeroController.instance.TakeMP(SaveData.SpellCost - 24);
+                HeroController.instance.TakeMP(GlobalSaveData.SpellCost - 24);
         }
 
         orig(self);
@@ -156,14 +156,14 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
     {
         if (self.IsCorrectContext("Spell Control", "Knight", null) && self.integer1.Name == "MP" && (self.State.Name == "Can Focus?"
             || self.State.Name == "Full HP?" || self.State.Name == "Full HP? 2"))
-            if (SaveData.IsHunter)
-                self.integer2.Value = SaveData.FocusCost;
+            if (GlobalSaveData.IsHunter)
+                self.integer2.Value = GlobalSaveData.FocusCost;
             else
                 self.integer2.Value = 33;
         else if (self.IsCorrectContext("Spell Control", "Knight", "Can Cast? QC") || self.IsCorrectContext("Spell Control", "Knight", "Can Cast?"))
         {
-            if (SaveData.IsHunter)
-                self.Fsm.Variables.FindFsmInt("MP Cost").Value = SaveData.SpellCost;
+            if (GlobalSaveData.IsHunter)
+                self.Fsm.Variables.FindFsmInt("MP Cost").Value = GlobalSaveData.SpellCost;
             else
                 self.Fsm.Variables.FindFsmInt("MP Cost").Value = 33;
         }
@@ -178,6 +178,28 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
     internal static bool IsModuleUsed<T>() where T : Module 
         => Instance.Modules.FirstOrDefault(x => x is T)?.IsModuleUsed ?? false;
 
+    private static string MenuName(string str)
+    {
+        if (str.Length == 0) return str;
+
+        StringBuilder sb = new();
+        sb.Append(char.ToUpper(str[0]));
+        bool prevUpper = true;
+        for (int i = 1; i < str.Length; i++)
+        {
+            if (char.IsUpper(str[i]) && !prevUpper) sb.Append(' ');
+            prevUpper = char.IsUpper(str[i]);
+            sb.Append(str[i]);
+        }
+        return sb.ToString();
+    }
+
+    private static HorizontalOption CreateEnumOption<E>(string header, string description, Action<E> setter, Func<E> getter) where E : Enum
+    {
+        List<object> enums = [.. Enum.GetValues(typeof(E))];
+        return new HorizontalOption(header, description, [.. enums.Select(e => MenuName(Enum.GetName(typeof(E), e)))], x => setter((E)enums[x]), () => enums.IndexOf(getter()));
+    }
+
     #endregion
 
     #region Interfaces
@@ -186,12 +208,16 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
     {
         List<Element> elements = new()
         {
-            new HorizontalOption("Role:", "Flag that indicates if player is a hunter or speedrunner.", new string[]{"Hunter", "Speedrunner" },
-            x => SaveData.IsHunter = x == 0,
-            () => SaveData.IsHunter ? 0 : 1),
-            new CustomSlider("Hunter Focus Cost:", x => SaveData.FocusCost = (int)x, () => SaveData.FocusCost, 33, 99, true),
-            new CustomSlider("Hunter Focus Speed:", x => SaveData.FocusSpeed = x, () => SaveData.FocusSpeed, 1, 3),
-            new CustomSlider("Hunter Spell Cost:", x => SaveData.SpellCost = (int)x, () => SaveData.SpellCost, 33, 99, true),
+            new HorizontalOption("Role:", "Flag that indicates if player is a hunter or speedrunner.", ["Hunter", "Speedrunner"],
+                                 x => GlobalSaveData.IsHunter = x == 0,
+                                 () => GlobalSaveData.IsHunter ? 0 : 1),
+            new CustomSlider("Hunter Focus Cost:", x => GlobalSaveData.FocusCost = (int)x, () => GlobalSaveData.FocusCost, 33, 99, true),
+            new CustomSlider("Hunter Focus Speed:", x => GlobalSaveData.FocusSpeed = x, () => GlobalSaveData.FocusSpeed, 1, 3),
+            new CustomSlider("Hunter Spell Cost:", x => GlobalSaveData.SpellCost = (int)x, () => GlobalSaveData.SpellCost, 33, 99, true),
+            CreateEnumOption("Timer position:", "Where to display pause, death, and custom countdown timers.",
+                             x => GlobalSaveData.PauseTimerPosition = x, () => GlobalSaveData.PauseTimerPosition),
+            CreateEnumOption("Timer size:", "Size of pause, death, and custom countdown timers.",
+                             x => GlobalSaveData.PauseTimerSize = x, () => GlobalSaveData.PauseTimerSize)
         };
         foreach (Module module in Modules)
         {
@@ -205,27 +231,31 @@ public class TheHuntIsOn : Mod, IGlobalSettings<HuntGlobalSaveData>, ICustomMenu
 
     public void OnLoadGlobal(HuntGlobalSaveData saveData)
     {
-        SaveData = saveData ?? new();
-        SaveData.AffectionTable ??= [];
+        GlobalSaveData = saveData ?? new();
+        GlobalSaveData.AffectionTable ??= [];
         
         foreach (Module module in Modules)
-            if (SaveData.AffectionTable.ContainsKey(module.GetType().Name))
-                module.Affection = SaveData.AffectionTable[module.GetType().Name];
+            if (GlobalSaveData.AffectionTable.ContainsKey(module.GetType().Name))
+                module.Affection = GlobalSaveData.AffectionTable[module.GetType().Name];
     }
 
     public HuntGlobalSaveData OnSaveGlobal()
     {
         HuntGlobalSaveData globalData = new HuntGlobalSaveData();
 
-        globalData.FocusCost = SaveData.FocusCost;
-        globalData.FocusSpeed = SaveData.FocusSpeed;
-        globalData.SpellCost = SaveData.SpellCost;
-        globalData.IsHunter = SaveData.IsHunter;
+        globalData.FocusCost = GlobalSaveData.FocusCost;
+        globalData.FocusSpeed = GlobalSaveData.FocusSpeed;
+        globalData.SpellCost = GlobalSaveData.SpellCost;
+        globalData.IsHunter = GlobalSaveData.IsHunter;
 
         foreach (Module module in Modules)
             globalData.AffectionTable.Add(module.GetType().Name, module.Affection);
         return globalData;
     }
+
+    public void OnLoadLocal(HuntLocalSaveData saveData) => LocalSaveData = saveData ?? new();
+
+    public HuntLocalSaveData OnSaveLocal() => LocalSaveData;
 
     #endregion
 }

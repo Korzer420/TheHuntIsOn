@@ -14,8 +14,8 @@ internal abstract class Module
 
     public ModuleAffection Affection { get; set; }
 
-    public bool IsModuleUsed => Affection == ModuleAffection.All || (TheHuntIsOn.SaveData.IsHunter && Affection == ModuleAffection.OnlyHunter)
-        || (!TheHuntIsOn.SaveData.IsHunter && Affection == ModuleAffection.OnlySpeedrunner);
+    public bool IsModuleUsed => Affection == ModuleAffection.All || (TheHuntIsOn.GlobalSaveData.IsHunter && Affection == ModuleAffection.OnlyHunter)
+        || (!TheHuntIsOn.GlobalSaveData.IsHunter && Affection == ModuleAffection.OnlySpeedrunner);
 
     public abstract string MenuDescription { get; }
 
@@ -38,6 +38,8 @@ internal abstract class Module
         Disable();
         _active = false;
     }
+
+    internal virtual void Initialize() { }
 
     internal abstract void Enable();
 

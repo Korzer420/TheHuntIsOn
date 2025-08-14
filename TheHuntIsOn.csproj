@@ -12,13 +12,12 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<HollowKnightRefs>E:/Program Files/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed/</HollowKnightRefs>
 		<ExportDir>bin\Publish</ExportDir>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<DocumentationFile></DocumentationFile>
 		<FileVersion>1.0.0.0</FileVersion>
-		<BaseOutputPath>E:\SteamLibrary\steamapps\common\Hollow Knight HKMP SRvH\hollow_knight_Data\Managed\Mods\TheHuntIsOn</BaseOutputPath>
 	</PropertyGroup>
+  <Import Project="LocalOverrides.targets" Condition="Exists('LocalOverrides.targets')" />
 
 	<ItemGroup>
 	  <None Remove="Resources\SceneData.json" />

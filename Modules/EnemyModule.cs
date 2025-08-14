@@ -1,12 +1,7 @@
-﻿using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
+﻿using HutongGames.PlayMaker.Actions;
 using KorzUtils.Helper;
 using Modding;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using TheHuntIsOn.Modules.HealthModules;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

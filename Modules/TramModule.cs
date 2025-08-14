@@ -1,5 +1,4 @@
-﻿using KorzUtils;
-using KorzUtils.Data;
+﻿using KorzUtils.Data;
 using KorzUtils.Helper;
 
 namespace TheHuntIsOn.Modules;

@@ -1,6 +1,5 @@
 ﻿using HutongGames.PlayMaker.Actions;
 using KorzUtils.Helper;
-using TheHuntIsOn.Modules.HealthModules;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
