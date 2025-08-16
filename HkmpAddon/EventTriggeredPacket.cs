@@ -4,18 +4,21 @@ namespace TheHuntIsOn.HkmpAddon;
 
 internal class EventTriggeredPacket : IPacketData
 {
-    public NetEvent NetEvent { get; set; }
-    
-    public void WriteData(IPacket packet)
-    {
-        packet.Write((byte) NetEvent);
-    }
+    #region Properties
 
-    public void ReadData(IPacket packet)
-    {
-        NetEvent = (NetEvent) packet.ReadByte();
-    }
+    public NetEvent NetEvent { get; set; }
 
     public bool IsReliable => true;
+
     public bool DropReliableDataIfNewerExists => false;
+
+    #endregion
+
+    #region Methods
+
+    public void WriteData(IPacket packet) => packet.Write((byte)NetEvent);
+
+    public void ReadData(IPacket packet) => NetEvent = (NetEvent)packet.ReadByte(); 
+
+    #endregion
 }

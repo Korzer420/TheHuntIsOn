@@ -24,6 +24,7 @@ internal class StagModule : Module
                 self.GetState("Can Talk?").AdjustTransitions("Sturdy");
             }
         }
+
         orig(self);
     }
 

@@ -43,7 +43,7 @@ internal class MaskModule : Module
         orig(self);
     }
 
-    private void PlayerData_AddToMaxHealth(MonoMod.Cil.ILContext il)
+    private void pd_AddToMaxHealth(MonoMod.Cil.ILContext il)
     {
         ILCursor cursor = new(il);
         cursor.Goto(0);
@@ -64,14 +64,14 @@ internal class MaskModule : Module
 
     internal override void Enable()
     {
-        IL.PlayerData.AddToMaxHealth += PlayerData_AddToMaxHealth;
+        IL.PlayerData.AddToMaxHealth += pd_AddToMaxHealth;
         On.HutongGames.PlayMaker.Actions.SendEventByName.OnEnter += SendEventByName_OnEnter;
         On.PlayMakerFSM.OnEnable += PlayMakerFSM_OnEnable;
     }
 
     internal override void Disable()
     {
-        IL.PlayerData.AddToMaxHealth -= PlayerData_AddToMaxHealth;
+        IL.PlayerData.AddToMaxHealth -= pd_AddToMaxHealth;
         On.HutongGames.PlayMaker.Actions.SendEventByName.OnEnter -= SendEventByName_OnEnter;
         On.PlayMakerFSM.OnEnable -= PlayMakerFSM_OnEnable;
     }

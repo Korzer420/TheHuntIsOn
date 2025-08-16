@@ -14,9 +14,13 @@ public class HuntGlobalSaveData
 
 	public int FocusCost { get; set; } = 33;
 
-	public ShadePlatformMode ShadePlatformSpawn { get; set; }
+	public int SpellCost { get; set; } = 33;
 
-    public bool RetainBosses { get; set; }
+	public bool DisableEnemies { get; set; }
+
+	public bool InvincibleBosses { get; set; }
+
+	public bool DreamBossAccess { get; set; }
 
     #endregion
 }

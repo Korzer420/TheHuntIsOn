@@ -14,7 +14,7 @@ internal class ElevatorModule : Module
 {
     #region Properties
 
-    public override string MenuDescription => "Removes elevators in CoT.";
+    public override string MenuDescription => "Removes elevators in City of Tears.";
 
     public static GameObject Door { get; set; }
 
@@ -175,6 +175,7 @@ internal class ElevatorModule : Module
         On.PlayMakerFSM.OnEnable += PlayMakerFSM_OnEnable;
         On.HutongGames.PlayMaker.Actions.SetPlayerDataBool.OnEnter += SetPlayerDataBool_OnEnter;
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
+        
     }
 
     internal override void Disable()
@@ -196,7 +197,7 @@ internal class ElevatorModule : Module
         float currentHeight = bottomLeft.y - 1f;
         while (currentHeight <= topRight.y)
         {
-            GameObject platform = GameObject.Instantiate(ShadeModule.PlatformPrefab, new(placeLeft ? bottomLeft.x : topRight.x, currentHeight, 0f), Quaternion.identity);
+            GameObject platform = GameObject.Instantiate(ShadeSkipModule.PlatformPrefab, new(placeLeft ? bottomLeft.x : topRight.x, currentHeight, 0f), Quaternion.identity);
             platform.SetActive(true);
             currentHeight += 5f;
             placeLeft = !placeLeft;

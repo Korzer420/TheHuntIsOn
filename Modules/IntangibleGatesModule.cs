@@ -8,7 +8,7 @@ internal class IntangibleGatesModule : Module
 {
     #region Properties
 
-    public override string MenuDescription => "Makes gates of arenas intangible for the player";
+    public override string MenuDescription => "Allows the player to walk through gates.";
 
     #endregion
 

@@ -1,9 +1,12 @@
 using System;
 using System.Diagnostics.Eventing.Reader;
+using System.Linq;
 using Hkmp.Api.Client;
+using Hkmp.Api.Command.Client;
 using Hkmp.Api.Server;
 using KorzUtils.Helper;
 using Modding;
+using MonoMod.Cil;
 using Satchel;
 using TheHuntIsOn.HkmpAddon;
 
@@ -18,6 +21,9 @@ internal class EventNetworkModule : Module
     public HuntClientAddon HuntClientAddon { get; private set; }
 
     public HuntServerAddon HuntServerAddon { get; private set; }
+
+
+    public static IClientApi _clientApi;
     
     private bool AreAddonsLoaded { get; set; }
 
@@ -65,11 +71,13 @@ internal class EventNetworkModule : Module
             {
                 // Speedrunner obtained Vengeful Spirit
                 SendEvent(NetEvent.VengefulSpirit);
+                SendEvent(NetEvent.PowerUp);
             }
             else if (orig == 2)
             {
                 // Speedrunner obtained Shade Soul
                 SendEvent(NetEvent.ShadeSoul);
+                SendEvent(NetEvent.PowerUp);
             }
         }
         else if (name == nameof(PlayerData.quakeLevel))
@@ -78,11 +86,13 @@ internal class EventNetworkModule : Module
             {
                 // Speedrunner obtained Desolate Dive
                 SendEvent(NetEvent.DesolateDive);
+                SendEvent(NetEvent.PowerUp);
             }
             else if (orig == 2)
             {
                 // Speedrunner obtained Descending Dark
                 SendEvent(NetEvent.DescendingDark);
+                SendEvent(NetEvent.PowerUp);
             }
         }
         else if (name == nameof(PlayerData.screamLevel))
@@ -91,19 +101,25 @@ internal class EventNetworkModule : Module
             {
                 // Speedrunner obtained Howling Wraiths
                 SendEvent(NetEvent.HowlingWraiths);
+                SendEvent(NetEvent.PowerUp);
             }
             else if (orig == 2)
             {
                 // Speedrunner obtained Abyss Shriek
                 SendEvent(NetEvent.AbyssShriek);
+                SendEvent(NetEvent.PowerUp);
             }
         }
         else if (name == nameof(PlayerData.maxHealth))
         {
-            if (orig == PlayerData.instance.GetInt(nameof(PlayerData.maxHealth))) return orig;
+            if (orig == PlayerData.instance.GetInt(nameof(PlayerData.maxHealth)) || // If max health hasn't changed
+               (orig - PlayerData.instance.GetInt(nameof(PlayerData.maxHealth)) > 1) || // If max health gained is more than 1 (equipping Fragile Heart)
+               (orig - PlayerData.instance.GetInt(nameof(PlayerData.maxHealth)) < -1)) // If max health lost is more than 1 (unequipping Fragile Heart)
+               return orig;
 
-            // Speedrunner obtained a full Mask
+            // Speedrunner obtained a Mask
             SendEvent(NetEvent.Mask);
+            SendEvent(NetEvent.PowerUp);
         }
         else if (name == nameof(PlayerData.MPReserveMax))
         {
@@ -111,6 +127,7 @@ internal class EventNetworkModule : Module
 
             // Speedrunner obtained a full Soul Vessel
             SendEvent(NetEvent.SoulVessel);
+            SendEvent(NetEvent.PowerUp);
         }
         else if (name == nameof(PlayerData.grubsCollected))
         {
@@ -119,46 +136,54 @@ internal class EventNetworkModule : Module
         }
         else if (name == nameof(PlayerData.charmSlots))
         {
-            if (orig == 4)
-            {
-                // Speedrunner has collected a fourth Charm Notch
-                SendEvent(NetEvent.Notch4);
-            }
-            else if (orig == 5)
-            {
-                // Speedrunner has collected a fifth Charm Notch
-                SendEvent(NetEvent.Notch5);
-            }
-            else if (orig == 6)
-            {
-                // Speedrunner has collected a sixth Charm Notch
-                SendEvent(NetEvent.Notch6);
-            }
-            else if (orig == 7)
-            {
-                // Speedrunner has collected a seventh Charm Notch
-                SendEvent(NetEvent.Notch7);
-            }
-            else if (orig == 8)
-            {
-                // Speedrunner has collected an eighth Charm Notch
-                SendEvent(NetEvent.Notch8);
-            }
-            else if (orig == 9)
-            {
-                // Speedrunner has collected a ninth Charm Notch
-                SendEvent(NetEvent.Notch9);
-            }
-            else if (orig == 10)
-            {
-                // Speedrunner has collected a tenth Charm Notch
-                SendEvent(NetEvent.Notch10);
-            }
-            else if (orig == 11)
-            {
-                // Speedrunner has collected an eleventh Charm Notch
-                SendEvent(NetEvent.Notch11);
-            }
+            // Speedrunner collected a Charm Notch
+            SendEvent(NetEvent.CharmNotch);
+            SendEvent(NetEvent.PowerUp);
+        }
+        else if (name
+                 is nameof(PlayerData.killsInfectedKnight)
+                 or nameof(PlayerData.killsMawlek)
+                 or nameof(PlayerData.killsNailBros)
+                 or nameof(PlayerData.killsJarCollector)
+                 or nameof(PlayerData.killsMegaBeamMiner)
+                 or nameof(PlayerData.killsDungDefender)
+                 or nameof(PlayerData.killsWhiteDefender)
+                 or nameof(PlayerData.killsFalseKnight)
+                 or nameof(PlayerData.killsFlukeMother)
+                 or nameof(PlayerData.killsLobsterLancer)
+                 or nameof(PlayerData.killsNailsage)
+                 or nameof(PlayerData.killsGrimm)
+                 or nameof(PlayerData.killsNightmareGrimm)
+                 or nameof(PlayerData.killsBigFly)
+                 or nameof(PlayerData.killsHiveKnight)
+                 or nameof(PlayerData.killsHollowKnight)
+                 or nameof(PlayerData.killsHornet)
+                 or nameof(PlayerData.killsMantisLord)
+                 or nameof(PlayerData.killsMegaMossCharger)
+                 or nameof(PlayerData.killsMimicSpider)
+                 or nameof(PlayerData.killsOblobble)
+                 or nameof(PlayerData.killsPaintmaster)
+                 or nameof(PlayerData.killsFinalBoss)
+                 or nameof(PlayerData.killsMageLord)
+                 or nameof(PlayerData.killsMageKnight)
+                 or nameof(PlayerData.killsTraitorLord)
+                 or nameof(PlayerData.killsMegaJellyfish)
+                 or nameof(PlayerData.killsBigBuzzer)
+                 or nameof(PlayerData.killsBlackKnight)
+                 or nameof(PlayerData.killsZote)
+                 or nameof(PlayerData.killsGreyPrince)
+                 or nameof(PlayerData.killsHollowKnightPrime)
+                 or nameof(PlayerData.killsGhostXero)
+                 or nameof(PlayerData.killsGhostAladar)
+                 or nameof(PlayerData.killsGhostHu)
+                 or nameof(PlayerData.killsGhostMarmu)
+                 or nameof(PlayerData.killsGhostNoEyes)
+                 or nameof(PlayerData.killsGhostGalien)
+                 or nameof(PlayerData.killsGhostMarkoth))
+        {
+            // Speedrunner defeated a boss
+            orig = 1;
+            SendEvent(NetEvent.BossKilled);
         }
 
         return orig;
@@ -196,108 +221,201 @@ internal class EventNetworkModule : Module
 
         if (orig)
         {
-            if (name == nameof(PlayerData.hasDash))
+            if (name == nameof(pd.hasDash))
             {
                 SendEvent(NetEvent.MothwingCloak);
                 SendConditionalMovement();
             }
-            else if (name == nameof(PlayerData.hasWalljump))
+            else if (name == nameof(pd.hasWalljump))
             {
                 SendEvent(NetEvent.MantisClaw);
                 SendConditionalMovement();
             }
-            else if (name == nameof(PlayerData.hasSuperDash))
+            else if (name == nameof(pd.hasSuperDash))
             {
                 SendEvent(NetEvent.CrystalHeart);
                 SendConditionalMovement();
             }
-            else if (name == nameof(PlayerData.hasDoubleJump))
+            else if (name == nameof(pd.hasDoubleJump))
             {
                 SendEvent(NetEvent.MonarchWings);
                 SendConditionalMovement();
             }
-            else if (name == nameof(PlayerData.hasAcidArmour))
+            else if (name == nameof(pd.hasAcidArmour))
             {
                 SendEvent(NetEvent.IsmasTear);
                 SendConditionalMovement();
             }
-            else if (name == nameof(PlayerData.hasShadowDash))
+            else if (name == nameof(pd.hasShadowDash))
             {
                 SendEvent(NetEvent.ShadeCloak);
                 SendConditionalMovement();
             }
-            else if (name == nameof(PlayerData.hasDreamNail))
+            else if (name == nameof(pd.hasDreamNail))
             {
                 SendEvent(NetEvent.DreamNail);
             }
-            else if (name == nameof(PlayerData.hasCyclone))
+            else if (name == nameof(pd.hasCyclone))
             {
                 SendEvent(NetEvent.CycloneSlash);
+                SendEvent(NetEvent.PowerUp);
             }
-            else if (name == nameof(PlayerData.hasUpwardSlash))
+            else if (name == nameof(pd.hasUpwardSlash))
             {
                 SendEvent(NetEvent.DashSlash);
+                SendEvent(NetEvent.PowerUp);
             }
-            else if (name == nameof(PlayerData.hasDashSlash))
+            else if (name == nameof(pd.hasDashSlash))
             {
                 SendEvent(NetEvent.GreatSlash);
+                SendEvent(NetEvent.PowerUp);
             }
-            else if (name 
-                     is nameof(PlayerData.lurienDefeated) 
-                     or nameof(PlayerData.hegemolDefeated) 
-                     or nameof(PlayerData.monomonDefeated))
+            else if (name
+                     is nameof(pd.lurienDefeated)
+                     or nameof(pd.hegemolDefeated)
+                     or nameof(pd.monomonDefeated))
             {
                 SendEvent(NetEvent.Dreamer);
             }
             else if (name
-                     is nameof(PlayerData.openedCrossroads)
-                     or nameof(PlayerData.openedDeepnest)
-                     or nameof(PlayerData.openedGreenpath)
-                     or nameof(PlayerData.openedRuins1)
-                     or nameof(PlayerData.openedRuins2)
-                     or nameof(PlayerData.openedFungalWastes)
-                     or nameof(PlayerData.openedHiddenStation)
-                     or nameof(PlayerData.openedRoyalGardens)
-                     or nameof(PlayerData.tollBenchCity)
-                     or nameof(PlayerData.tollBenchAbyss)
-                     or nameof(PlayerData.tollBenchQueensGardens)
-                     or nameof(PlayerData.cityLift1))
+                     is nameof(pd.openedCrossroads)
+                     or nameof(pd.openedDeepnest)
+                     or nameof(pd.openedGreenpath)
+                     or nameof(pd.openedRuins1)
+                     or nameof(pd.openedRuins2)
+                     or nameof(pd.openedFungalWastes)
+                     or nameof(pd.openedHiddenStation)
+                     or nameof(pd.openedRoyalGardens)
+                     or nameof(pd.tollBenchCity)
+                     or nameof(pd.tollBenchAbyss)
+                     or nameof(pd.tollBenchQueensGardens)
+                     or nameof(pd.cityLift1))
             {
                 SendEvent(NetEvent.Toll);
             }
-            else if (name is nameof(PlayerData.cityBridge1) or nameof(PlayerData.cityBridge2))
+            else if (name is nameof(pd.cityBridge1) or nameof(pd.cityBridge2))
             {
                 SendEvent(NetEvent.LeverHit);
+            }
+            else if (name is nameof(pd.killedHollowKnight) or nameof(pd.killedFinalBoss)) 
+            {
+                SendEvent(NetEvent.FinalBossKilled);
+            }
+            else if (name 
+                     is nameof(pd.infectedKnightDreamDefeated)
+                     or nameof(pd.falseKnightDreamDefeated)
+                     or nameof(pd.mageLordDreamDefeated))
+            {
+                SendEvent(NetEvent.BossKilled);
+            }
+            else if (name.StartsWith("gotCharm_"))
+            {
+                SendEvent(NetEvent.CharmCollected);
             }
         }
 
         return orig;
     }
-    
+
     private void PlayMakerFSM_OnEnable(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self)
     {
         orig(self);
-        
-        // Make sure that the player causing changes is the speedrunner
-        if (!IsModuleUsed || TheHuntIsOn.SaveData.IsHunter)
-        {
-            return;
-        }
 
-        if (self.name.Equals("Inspect Region") && self.Fsm.Name.Equals("Control") &&
+        // Make sure that the player causing changes is the speedrunner
+        if (!IsModuleUsed || TheHuntIsOn.SaveData.IsHunter) return;
+
+        if (self.name.Equals("Stag") && self.Fsm.Name.Equals("Stag Control")) 
+        {
+            self.InsertCustomAction("Fade", () =>
+            {
+                SendEvent(NetEvent.Stag);
+            }, 0);            
+
+            self.InsertCustomAction("Dirtmouth", () =>
+            {
+                if (GameManager.instance.sceneName != "Room_Town_Stag_Station")
+                    UsedStag(NetEvent.StagDirtmouth);
+            }, 2);
+
+            self.InsertCustomAction("Crossroads", () =>
+            {
+                if (GameManager.instance.sceneName != "Crossroads_47")
+                    UsedStag(NetEvent.StagCrossroads);
+            }, 2);
+
+            self.InsertCustomAction("Greenpath", () =>
+            {
+                if (GameManager.instance.sceneName != "Fungus1_16_alt")
+                    UsedStag(NetEvent.StagGreenpath);
+            }, 2);
+
+            self.InsertCustomAction("Fungal Wastes", () =>
+            {
+                if (GameManager.instance.sceneName != "Fungus2_02")
+                    UsedStag(NetEvent.StagFungalWastes);
+            }, 2);
+
+            self.InsertCustomAction("City Storerooms", () =>
+            {
+                if (GameManager.instance.sceneName != "Ruins1_29")
+                    UsedStag(NetEvent.StagCityStorerooms);
+            }, 2);
+
+            self.InsertCustomAction("Resting Grounds", () =>
+            {
+                if (GameManager.instance.sceneName != "RestingGrounds_09")
+                    UsedStag(NetEvent.StagRestingGrounds);
+            }, 2);
+
+            self.InsertCustomAction("Kings Station", () =>
+            {
+                if (GameManager.instance.sceneName != "Ruins2_08")
+                    UsedStag(NetEvent.StagKingsStation);
+            }, 2);
+
+            self.InsertCustomAction("Deepnest", () =>
+            {
+                if (GameManager.instance.sceneName != "Deepnest_09")
+                    UsedStag(NetEvent.StagDeepnest);
+            }, 2);
+
+            self.InsertCustomAction("Royal Gardens", () =>
+            {
+                if (GameManager.instance.sceneName != "Fungus3_40")
+                    UsedStag(NetEvent.StagRoyalGardens);
+            }, 2);
+
+            self.InsertCustomAction("Hidden Station", () =>
+            {
+                if (GameManager.instance.sceneName != "Abyss_22")
+                    UsedStag(NetEvent.StagHiddenStation);
+            }, 2);
+
+            self.InsertCustomAction("Stag Nest", () =>
+            {
+                if (GameManager.instance.sceneName != "Cliffs_03")
+                    UsedStag(NetEvent.StagStagNest);
+            }, 2);
+        }
+        else if (self.name.Equals("Hero Death") && self.Fsm.Name.Equals("Hero Death Anim"))
+        {
+            self.InsertCustomAction("Start", () =>
+            {
+                SendEvent(NetEvent.RunnerDeath);
+            }, 0);
+
+            self.InsertCustomAction("Anim Start", () =>
+            {
+                SendEvent(NetEvent.RunnerDreamDeath);
+            }, 0);
+        }
+        else if (self.name.Equals("Inspect Region") && self.Fsm.Name.Equals("Control") &&
             self.gameObject.scene.name is "Room_Tram" or "Room_Tram_RG")
         {
             self.InsertCustomAction("Send Event", () =>
             {
                 SendEvent(NetEvent.Tram);
             }, 1);
-        }
-        else if (self.name.Equals("Stag") && self.Fsm.Name.Equals("Stag Control"))
-        {
-            self.InsertCustomAction("Fade", () =>
-            {
-                SendEvent(NetEvent.Stag);
-            }, 0);
         }
         else if (self.name.Equals("Toll Gate Machine") && self.Fsm.Name.Equals("Toll Machine"))
         {
@@ -309,18 +427,16 @@ internal class EventNetworkModule : Module
                 }, 2);
             }
         }
-        else if (self.name.Equals("Dreamnail Hit") && self.Fsm.Name.Equals("ghost_npc_dreamnail"))
-        {
-            // self.InsertCustomAction("Send", () =>
-            // {
-            //     SendEvent(NetEvent.DreamWarrior);
-            // }, 1);
-        }
         else if (self.name.Equals("Ghost Warrior NPC") && self.Fsm.Name.Equals("Conversation Control"))
         {
+            self.InsertCustomAction("Collected", () =>
+            {
+                SendEvent(NetEvent.DreamWarriorAbsorbed);
+            }, 1);
+
             self.InsertCustomAction("Start Fight", () =>
             {
-                SendEvent(NetEvent.DreamWarrior);
+                SendEvent(NetEvent.DreamWarriorStarted);
             }, 7);
         }
         else if (self.name.Equals("UI List") && self.Fsm.Name.Equals("Confirm Control"))
@@ -350,6 +466,7 @@ internal class EventNetworkModule : Module
         {
             self.InsertCustomAction("Upgrade", () =>
             {
+                SendEvent(NetEvent.PowerUp);
                 SendEvent(NetEvent.NailUpgrade);
             }, 5);
         }
@@ -371,6 +488,14 @@ internal class EventNetworkModule : Module
                 }, 0);
             }
         }
+    }
+
+    void UsedStag(NetEvent stagEvent)
+    {
+        if (TheHuntIsOn.SaveData.IsHunter) return;
+        if (!_clientApi.ClientManager.Players.Any(p => (p.Team != _clientApi.ClientManager.Team) && p.IsInLocalScene)) return;
+
+        SendEvent(stagEvent);
     }
 
     private void NetManager_OnGrantItemsEvent(NetItem[] netItems)
@@ -443,8 +568,24 @@ internal class EventNetworkModule : Module
                     PDHelper.HasNailArt = true;
                     PDHelper.HasDashSlash = true;
                     break;
+                case NetItem.MaskShard:
+                    PDHelper.HeartPieces += 1;
+
+                    if (PDHelper.HeartPieces == 4)
+                    {
+                        if (pd.maxHealthBase < 9)
+                        {
+                            HeroController.instance.MaxHealth();
+                            HeroController.instance.AddToMaxHealth(1);
+                            PlayMakerFSM.BroadcastEvent("MAX HP UP");
+                        }
+
+                        PDHelper.HeartPieces = 0;
+                    }
+
+                    break;
                 case NetItem.Mask:
-                    if (PlayerData.instance.maxHealthBase < 9)
+                    if (pd.maxHealthBase < 9)
                     {
                         HeroController.instance.MaxHealth();
                         HeroController.instance.AddToMaxHealth(1);
@@ -453,7 +594,7 @@ internal class EventNetworkModule : Module
 
                     break;
                 case NetItem.SoulVessel:
-                    if (PlayerData.instance.MPReserveMax < 99)
+                    if (pd.MPReserveMax < 99)
                     {
                         HeroController.instance.AddToMaxMPReserve(33);
                         PlayMakerFSM.BroadcastEvent("NEW SOUL ORB");
@@ -483,7 +624,6 @@ internal class EventNetworkModule : Module
             }
         }
     }
-
     #endregion
 
     #region Methods

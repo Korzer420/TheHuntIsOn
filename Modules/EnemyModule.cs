@@ -8,18 +8,21 @@ using System.Collections.Generic;
 using System.Linq;
 using TheHuntIsOn.Modules.HealthModules;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TheHuntIsOn.Modules;
 
 internal class EnemyModule : Module
 {
-    #region Members
+    #region Properties
 
-    private static GameObject _dreamGate;
+    public override string MenuDescription => "Adjusts enemy spawns depending on toggles enabled below.";
 
     #endregion
 
-    #region Properties
+    #region Members
+
+    private static GameObject _dreamGate;
 
     public static GameObject TeleporterPrefab { get; set; }
 
@@ -36,7 +39,10 @@ internal class EnemyModule : Module
         }
     }
 
-    public override string MenuDescription => "Disables all enemies.";
+    public static GameObject FKDreamEnter { get; set; }
+    public static GameObject STDreamEnter { get; set; }
+    public static GameObject HKDreamEnter { get; set; }
+    public static GameObject DreamTree { get; set; }
 
     #endregion
 
@@ -46,110 +52,146 @@ internal class EnemyModule : Module
     {
         if (!IsModuleUsed)
             return isAlreadyDead;
-        if (RetainBosses)
+
+        HealthManager healthManager = enemy.GetComponent<HealthManager>();
+
+        if (InvincibleBosses)
         {
-            // We use the hp as an indicator if the enemy is a boss.
-            // As early game bosses do not have 200+ hp, we call them here seperately.
-            // Also we exclude the "adds" from Collector, Gruz Mother and Traitor Lord.
-            if (enemy.name == "Mega Moss Charger" || enemy.name == "Giant Fly"
-                || enemy.name == "False Knight New" || enemy.name == "Mage Knight"
-                || enemy.name == "Mage Lord Phase2"
-                || enemy.scene.name == "Fungus3_23_boss" || enemy.name == "Head"
-                || enemy.scene.name == "Ruins2_11_boss" || (enemy.name.Contains("Fly") && enemy.scene.name == "Crossroads_04"))
+            if (healthManager.hp > 200 ||
+                enemy.name == "Mega Moss Charger" ||
+                enemy.name == "Giant Fly" ||
+                enemy.name == "False Knight New" ||
+                enemy.name == "Mage Knight" ||
+                enemy.name == "Mage Lord Phase2" ||
+                enemy.name == "Head" ||
+                enemy.name == "Mantis Lord S1" ||
+                enemy.name == "Mantis Lord S2" ||
+                enemy.name == "Ghost Warrior Xero")
+            {
+                healthManager.hp = 9999;
                 return false;
-            HealthManager healthManager = enemy.GetComponent<HealthManager>();
-            return healthManager.hp < 200 || isAlreadyDead;
+            }
         }
-        else
-            return enemy.name != "Radiance";
+
+        if (DisableEnemies)
+        {
+            if ((enemy.name.Contains("Fly") && enemy.scene.name == "Crossroads_04") ||
+                 enemy.scene.name == "Fungus3_23_boss" ||
+                 enemy.scene.name == "Ruins2_11_boss" ||
+                 enemy.name.StartsWith("Acid Walker") ||
+                 enemy.scene.name.StartsWith("Room_Colosseum") ||
+                 enemy.name == "Radiance")
+                return false;
+            else
+                return true;
+        }
+
+        return isAlreadyDead;
     }
 
-    private void BlockDreamBosses(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self)
+    private void DeactivateIfPlayerdataTrue_OnEnable(On.DeactivateIfPlayerdataTrue.orig_OnEnable orig, DeactivateIfPlayerdataTrue self)
+    {
+        if (IsModuleUsed && self.gameObject.name == "Dung Defender_Sleep")
+            return;
+        orig(self);
+    }
+
+    private void DeactivateIfPlayerdataFalse_OnEnable(On.DeactivateIfPlayerdataFalse.orig_OnEnable orig, DeactivateIfPlayerdataFalse self)
+    {
+        if (IsModuleUsed && self.gameObject.name == "Dung Defender_Sleep")
+            return;
+        orig(self);
+    }
+
+
+    private void PlayMakerFSM_OnEnable(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self)
     {
         if (IsModuleUsed)
         {
-            if (self.gameObject.name == "Battle Scene" && !RetainBosses)
-            {
-                if (self.FsmName == "Battle Control" && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Dream_01_False_Knight")
-                    self.GetState("Detect").ClearTransitions();
-                else if (self.FsmName == "Battle Scene" && (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Dream_04_White_Defender"
-                    || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Waterways_15"))
-                    self.GetState("Idle").ClearTransitions();
-            }
-            else if (self.gameObject.name == "Dream Mage Lord" && self.FsmName == "Mage Lord" && !RetainBosses)
-            {
-                // Remove fight start trigger.
-                self.transform.Find("Start Range").gameObject.SetActive(false);
-                // Remove ground
-                GameObject.Find("mage_window").SetActive(false);
-                // Remove the blocker that would appear upon entering the lower floor.
-                GameObject[] groundObjects = GameObject.FindObjectsOfType<GameObject>().Where(x => x.name.StartsWith("Dream Gate Phase 2")).ToArray();
-                for (int i = 0; i < groundObjects.Length; i++)
-                    GameObject.Destroy(groundObjects[i]);
-            }
-            else if (self.gameObject.name == "Lost Kin" && self.FsmName == "IK Control" && !RetainBosses)
-                GameObject.Destroy(self.transform.Find("Rewake Range").gameObject);
-            else if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Dream_Mighty_Zote"
-                || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Room_Bretta_Basement"
-                && !RetainBosses)
-            {
-                if (self.gameObject.name == "Grey Prince" && self.FsmName == "Control")
-                    self.GetState("Dormant").ClearTransitions();
-                else if (self.gameObject.name == "Audience" && self.FsmName == "Battle Control")
-                {
-                    self.GetState("Zote Start").RemoveAllActions();
-                    self.GetState("Zote Start").AddActions(() =>
-                    {
-                        GameObject teleporterSprite = GameObject.Instantiate(DreamGate);
-                        teleporterSprite.transform.position = new(8.8f, 5f);
-                        GameObject teleporter = GameObject.Instantiate(ElevatorModule.Door);
-                        teleporter.name = "Zote Escape";
-                        teleporter.transform.position = new(8.8f, 6.1f);
-                        teleporter.SetActive(true);
-                        teleporter.transform.localScale = new(0.5f, 1f, 1f);
-
-                        PlayMakerFSM teleportFsm = teleporter.GetComponent<PlayMakerFSM>();
-                        if (TheHuntIsOn.IsModuleUsed<DreamHealModule>())
-                        {
-                            teleportFsm.FsmVariables.FindFsmString("Entry Gate").Value = "door1";
-                            teleportFsm.FsmVariables.FindFsmString("New Scene").Value = "Room_Bretta_Basement";
-                            teleportFsm.GetState("Enter").GetLastAction<SendEventByName>().sendEvent.Value = "FADE OUT";
-                        }
-                        else
-                        {
-                            teleportFsm.FsmVariables.FindFsmString("Entry Gate").Value = "top1";
-                            teleportFsm.FsmVariables.FindFsmString("New Scene").Value = "Tutorial_01";
-                        }
-                        teleportFsm.FsmVariables.FindFsmString("Prompt Name").Value = "Exit";
-                        teleportFsm.FsmVariables.FindFsmBool("Crossroads Ascent").Value = false;
-                    });
-                }
-            }
-            else if (self.gameObject.name == "Gate" && self.FsmName == "Control"
-                && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.StartsWith("Room_Final_Boss"))
-            {
-                self.GetState("Activate").Actions = Array.Empty<FsmStateAction>();
-                self.GetState("Activate").AddActions(() =>
-                {
-                    GameObject teleporterSprite = GameObject.Instantiate(DreamGate);
-                    teleporterSprite.transform.position = new(66.06f, 4.9f);
-                    GameObject teleporter = GameObject.Instantiate(TeleporterPrefab);
-                    teleporter.name = "Radiance Enter";
-                    teleporter.transform.position = new(66.06f, 6.1f);
-                    teleporter.SetActive(true);
-                    teleporter.transform.localScale = new(0.5f, 1f, 1f);
-
-                    PlayMakerFSM teleportFsm = teleporter.GetComponent<PlayMakerFSM>();
-                    teleportFsm.FsmVariables.FindFsmString("Entry Gate").Value = "door1";
-                    teleportFsm.FsmVariables.FindFsmString("New Scene").Value = "Dream_Final_Boss";
-                    teleportFsm.GetState("Change Scene").GetFirstAction<BeginSceneTransition>().preventCameraFadeOut = true;
-                    GameManager.instance.StartCoroutine(ModifyRadianceRoom());
-                });
-            }
-            else if (self.gameObject.name == "Fk Break Wall" && self.FsmName == "Control" && RetainBosses)
+            if (self.gameObject.name == "Fk Break Wall" && self.FsmName == "Control")
                 self.GetState("Pause").AdjustTransitions("Initial");
+            else if (self.gameObject.name == "IK Remains")
+            {
+                if (self.FsmName == "Control")
+                    self.transform.position = new Vector3(44.1f, 28.1f, self.transform.position.z);
+                else
+                    Component.Destroy(self);
+            }
+            else if (self.gameObject.name == "Basement Open")
+            {
+                self.gameObject.SetActive(true);
+                Component.Destroy(self);
+            }
         }
+
         orig(self);
+    }
+
+    private void PlayerDataBoolTest_OnEnter(On.HutongGames.PlayMaker.Actions.PlayerDataBoolTest.orig_OnEnter orig, HutongGames.PlayMaker.Actions.PlayerDataBoolTest self)
+    {
+        if (IsModuleUsed &&
+            ((self.IsCorrectContext("Control", "IK Remains", "Check") && self.boolName.Value == "infectedKnightDreamDefeated") ||
+            (self.IsCorrectContext("Control", "Mage Lord Remains", "Check") && self.boolName.Value == "mageLordDreamDefeated") ||
+            (self.IsCorrectContext("Control", "FK Corpse", "Check") && self.boolName.Value == "falseKnightDreamDefeated") ||
+            self.IsCorrectContext("Conversation Control", "Dreamer Plaque Inspect", "End") ||
+            self.IsCorrectContext("Control", "Dreamer Scene 2", "Init") ||
+            self.IsCorrectContext("FSM", "PostDreamnail", "Check")))
+            self.isTrue = self.isFalse;
+
+        orig(self);
+    }
+
+    private void SceneManager_activeSceneChanged(Scene arg0, Scene newScene)
+    {
+        if (IsModuleUsed)
+        {
+            switch (newScene.name)
+            {
+                case "Crossroads_10":
+                    GameObject FKcorpse = GameObject.Instantiate(DreamTree);
+                    FKcorpse.transform.position = new Vector3(32.88f, 52.24f, 0.007f);
+                    FKcorpse.SetActive(true);
+                    GameObject FKentry = GameObject.Instantiate(FKDreamEnter);
+                    FKentry.transform.position = new Vector3(32.88f, 48.84f, 0.007f);
+                    FKentry.SetActive(true);
+                    break;
+                case "Ruins1_24":
+                    GameObject.Find("door_dreamReturn").transform.position = new Vector3(4.1f, 18.65f, 0.007f);
+                    GameObject STcorpse = GameObject.Instantiate(DreamTree);
+                    STcorpse.transform.position = new Vector3(4.1f, 22.35f, 0.007f);
+                    STcorpse.SetActive(true);
+                    GameObject STentry = GameObject.Instantiate(STDreamEnter);
+                    STentry.transform.position = new Vector3(4.1f, 18.65f, 0.007f);
+                    STentry.SetActive(true);
+                    break;
+                case "Dream_02_Mage_Lord":
+                    CreateTeleporter(new Vector3(39.20f, 10.4f), "Soul Tyrant Exit", "Ruins1_24", "left1");
+                    break;
+                case "Dream_Mighty_Zote":
+                    CreateTeleporter(new Vector3(9.1f, 6.4f), "Grey Prince Zote Exit", "Room_Bretta_Basement", "top1");
+                    break;
+                case "Dream_Nailcollection":
+                    CreateTeleporter(new Vector3(272.88f, 52.4f), "Dream Nail Escape", "RestingGrounds_07", "right1");
+                    break;
+                case "Room_Final_Boss_Core":
+                    GameObject HKcorpse = GameObject.Instantiate(DreamTree);
+                    HKcorpse.transform.position = new Vector3(15.0f, 10.4f, 0.007f);
+                    HKcorpse.SetActive(true);
+                    GameObject HKentry = GameObject.Instantiate(HKDreamEnter);
+                    HKentry.transform.position = new Vector3(15.0f, 7.31f, 0.007f);
+                    HKentry.SetActive(true);
+                    GameManager.instance.StartCoroutine(ModifyRadianceRoom());
+                    break;
+                case "Dream_Final_Boss":
+                    CreateTeleporter(new Vector3(50.0f, 21.4f), "Radiance Exit (Start)", "Room_Final_Boss_Core", "left1");
+                    CreateTeleporter(new Vector3(42.3f, 36.7f), "Radiance Exit (Plats)", "Room_Final_Boss_Core", "left1");
+                    CreateTeleporter(new Vector3(63.3f, 138.2f), "Radiance Exit (Climb)", "Room_Final_Boss_Core", "left1");
+                    GameManager.instance.StartCoroutine(ModifyRadianceRoom());
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     private void BeginSceneTransition_OnEnter(On.HutongGames.PlayMaker.Actions.BeginSceneTransition.orig_OnEnter orig, HutongGames.PlayMaker.Actions.BeginSceneTransition self)
@@ -163,18 +205,33 @@ internal class EnemyModule : Module
 
     #region Methods
 
-    internal override void Enable()
+    /// <summary>
+    /// Creates a teleporter from a player location going to an entry location in a scene.
+    /// </summary>
+    /// <param name="playerLocation">The standing x,y coordinates of the player where the portal should be placed.</param>
+    /// <param name="portalName">The name of the portal.</param>
+    /// <param name="sceneTo">The name of the scene the portal should send the player to.</param>
+    /// <param name="entryLocation">The transition the player should appear from within the specified scene.</param>
+    private void CreateTeleporter(Vector3 playerLocation, string portalName, string sceneTo, string entryLocation)
     {
-        ModHooks.OnEnableEnemyHook += ModHooks_OnEnableEnemyHook;
-        On.PlayMakerFSM.OnEnable += BlockDreamBosses;
-        On.HutongGames.PlayMaker.Actions.BeginSceneTransition.OnEnter += BeginSceneTransition_OnEnter;
-    }
+        var portalInteractionLocation = new Vector3(playerLocation.x, (playerLocation.y - 0.31f));
+        var portalSpriteLocation = new Vector3(playerLocation.x, (playerLocation.y - 1.51f));
 
-    internal override void Disable()
-    {
-        ModHooks.OnEnableEnemyHook -= ModHooks_OnEnableEnemyHook;
-        On.PlayMakerFSM.OnEnable -= BlockDreamBosses;
-        On.HutongGames.PlayMaker.Actions.BeginSceneTransition.OnEnter -= BeginSceneTransition_OnEnter;
+        GameObject teleporterSprite = GameObject.Instantiate(DreamGate);
+        teleporterSprite.transform.position = portalSpriteLocation;
+        GameObject teleporter = GameObject.Instantiate(ElevatorModule.Door);
+        teleporter.name = portalName;
+        teleporter.transform.position = portalInteractionLocation;
+        teleporter.SetActive(true);
+        teleporter.transform.localScale = new(0.5f, 1f, 1f);
+
+        PlayMakerFSM teleportFsm = teleporter.GetComponent<PlayMakerFSM>();
+        teleportFsm.FsmVariables.FindFsmString("Entry Gate").Value = entryLocation;
+        teleportFsm.FsmVariables.FindFsmString("New Scene").Value = sceneTo;
+        teleportFsm.FsmVariables.FindFsmString("Prompt Name").Value = "Exit";
+        teleportFsm.FsmVariables.FindFsmBool("Crossroads Ascent").Value = false;
+        teleportFsm.GetState("Enter").GetLastAction<SendEventByName>().sendEvent.Value = "FADE OUT";
+        teleportFsm.GetState("Change Scene").GetFirstAction<BeginSceneTransition>().preventCameraFadeOut = true;
     }
 
     private IEnumerator ModifyRadianceRoom()
@@ -192,65 +249,38 @@ internal class EnemyModule : Module
         yield return new WaitForFinishedEnteringScene();
         GameManager.instance.FadeSceneIn();
 
-        if (RetainBosses)
-            // Let the UI reappear.
-            GameObject.Find("_GameCameras/HudCamera/Hud Canvas").LocateMyFSM("Slide Out").SendEvent("IN");
-        else
+        // Let the UI reappear.
+        GameObject.Find("_GameCameras/HudCamera/Hud Canvas").LocateMyFSM("Slide Out").SendEvent("IN");
+    }
+
+    internal override void Enable()
+    {
+        ModHooks.OnEnableEnemyHook += ModHooks_OnEnableEnemyHook;
+        if(DreamBossAccess)
         {
-            GameObject bossControl = GameObject.Find("Boss Control");
-            // Spawn all platforms
-            // Detach them from Radiance
-            List<GameObject> platforms = new();
-            Transform platformSetParent = bossControl.transform.Find("Plat Sets");
-            for (int i = 1; i < platformSetParent.childCount; i++)
-            {
-                Transform set = platformSetParent.GetChild(i);
-                foreach (Transform platform in set)
-                    if (platform.gameObject.LocateMyFSM("radiant_plat") != null)
-                        platforms.Add(platform.gameObject);
-            }
-            // Remove initial platforms
-            GameObject.Destroy(platformSetParent.GetChild(0).gameObject);
-
-            foreach (GameObject platform in platforms)
-            {
-                PlayMakerFSM fsm = platform.LocateMyFSM("radiant_plat");
-                fsm.GetState("Idle").ClearTransitions();
-                fsm.SendEvent("APPEAR");
-            }
-
-            // To prevent the camera from behaving weirdly.
-            GameObject.Destroy(bossControl.transform.Find("CamLocks/CamLock Challenge").gameObject);
-            bossControl.transform.Find("CamLocks").gameObject.AddComponent<ToggleCameraLock>();
-
-            // Deletes the spawn trigger, although this should be reachable anyway. But just in case.
-            GameObject.Destroy(bossControl.transform.Find("Challenge Prompt Radiant").gameObject);
-            // Let the UI reappear.
-            yield return new WaitUntil(() => HeroController.instance.acceptingInput);
-            GameObject.Find("_GameCameras/HudCamera/Hud Canvas").LocateMyFSM("Slide Out").SendEvent("IN");
-
-            GameObject teleporterSprite = GameObject.Instantiate(DreamGate);
-            teleporterSprite.transform.position = new(49.8f, 20.4f);
-            GameObject teleporter = GameObject.Instantiate(ElevatorModule.Door);
-            teleporter.name = "Radiance Escape";
-            teleporter.transform.position = new(49.8f, 21.4f);
-            teleporter.SetActive(true);
-            teleporter.transform.localScale = new(0.5f, 1f, 1f);
-
-            PlayMakerFSM teleportFsm = teleporter.GetComponent<PlayMakerFSM>();
-            if (TheHuntIsOn.IsModuleUsed<DreamHealModule>())
-            {
-                teleportFsm.FsmVariables.FindFsmString("Entry Gate").Value = "right1";
-                teleportFsm.FsmVariables.FindFsmString("New Scene").Value = "Room_Final_Boss_Atrium";
-            }
-            else
-            {
-                teleportFsm.FsmVariables.FindFsmString("Entry Gate").Value = "top1";
-                teleportFsm.FsmVariables.FindFsmString("New Scene").Value = "Tutorial_01";
-            }
-            teleportFsm.FsmVariables.FindFsmBool("Crossroads Ascent").Value = false;
-            teleportFsm.FsmVariables.FindFsmString("Prompt Name").Value = "Exit";
+            On.DeactivateIfPlayerdataTrue.OnEnable += DeactivateIfPlayerdataTrue_OnEnable;
+            On.DeactivateIfPlayerdataFalse.OnEnable += DeactivateIfPlayerdataFalse_OnEnable;
+            On.PlayMakerFSM.OnEnable += PlayMakerFSM_OnEnable;
+            On.HutongGames.PlayMaker.Actions.PlayerDataBoolTest.OnEnter += PlayerDataBoolTest_OnEnter;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
         }
+        
+        On.HutongGames.PlayMaker.Actions.BeginSceneTransition.OnEnter += BeginSceneTransition_OnEnter;
+    }
+
+    internal override void Disable()
+    {
+        ModHooks.OnEnableEnemyHook -= ModHooks_OnEnableEnemyHook;
+        if(!DreamBossAccess)
+        {
+            On.DeactivateIfPlayerdataTrue.OnEnable -= DeactivateIfPlayerdataTrue_OnEnable;
+            On.DeactivateIfPlayerdataFalse.OnEnable -= DeactivateIfPlayerdataFalse_OnEnable;
+            On.PlayMakerFSM.OnEnable -= PlayMakerFSM_OnEnable;
+            On.HutongGames.PlayMaker.Actions.PlayerDataBoolTest.OnEnter -= PlayerDataBoolTest_OnEnter;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= SceneManager_activeSceneChanged;
+        }
+       
+        On.HutongGames.PlayMaker.Actions.BeginSceneTransition.OnEnter -= BeginSceneTransition_OnEnter;
     }
 
     #endregion

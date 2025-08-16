@@ -200,49 +200,49 @@
   {
     "id": "Dream Plant",
     "sceneName": "Crossroads_07",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
     "id": "Reward 5",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
     "id": "Reward 31",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
     "id": "Reward 38",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
     "id": "Reward 23",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
     "id": "Reward 16",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
     "id": "Reward 10",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
     "id": "Reward 46",
     "sceneName": "Crossroads_38",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
@@ -689,7 +689,7 @@
   {
     "id": "Dream Plant",
     "sceneName": "Crossroads_ShamanTemple",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -857,7 +857,7 @@
   {
     "id": "Gate Switch",
     "sceneName": "Room_Town_Stag_Station",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
@@ -1139,13 +1139,13 @@
   {
     "id": "Secret Mask",
     "sceneName": "Fungus1_17",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
     "id": "Secret Mask (1)",
     "sceneName": "Fungus1_17",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1229,7 +1229,7 @@
   {
     "id": "Vine Platform (1)",
     "sceneName": "Fungus1_22",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1259,7 +1259,7 @@
   {
     "id": "Shiny Item",
     "sceneName": "Fungus1_22",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1403,7 +1403,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Fungus1_21",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1421,7 +1421,7 @@
   {
     "id": "Break Floor 1",
     "sceneName": "Fungus1_04",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
@@ -1530,13 +1530,13 @@
   {
     "id": "Secret Mask",
     "sceneName": "Fungus2_07",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
     "id": "Secret Mask (1)",
     "sceneName": "Fungus2_07",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1584,7 +1584,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Fungus2_21",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1728,7 +1728,7 @@
   {
     "id": "Secret Mask (2)",
     "sceneName": "Fungus2_29",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1758,7 +1758,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "Fungus2_29",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -1783,7 +1783,7 @@
     "id": "Mushroom Roller (3)",
     "sceneName": "Fungus2_29",
     "activated": false,
-    "semiPersistent": true
+    "semiPersistent": false
   },
   {
     "id": "Secret Mask",
@@ -1801,7 +1801,7 @@
     "id": "Break Floor 1",
     "sceneName": "Fungus2_29",
     "activated": false,
-    "semiPersistent": false
+    "semiPersistent": true
   },
   {
     "id": "Zombie Fungus A",
@@ -2312,13 +2312,13 @@
   {
     "id": "Secret Mask",
     "sceneName": "Fungus1_12",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
     "id": "Secret Mask sounder",
     "sceneName": "Fungus1_12",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -3249,7 +3249,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "Ruins1_32",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -3285,7 +3285,7 @@
   {
     "id": "Secret Mask (2)",
     "sceneName": "Ruins1_32",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -3983,7 +3983,7 @@
   {
     "id": "Shiny",
     "sceneName": "RestingGrounds_09",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
@@ -4031,7 +4031,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "RestingGrounds_10",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -4343,7 +4343,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Ruins2_06",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -4847,7 +4847,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "Deepnest_16",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -4871,7 +4871,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Deepnest_16",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -5015,7 +5015,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "Deepnest_03",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -5237,7 +5237,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "Deepnest_39",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -5327,7 +5327,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Deepnest_39",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -5933,7 +5933,7 @@
   {
     "id": "Secret Mask (2)",
     "sceneName": "Deepnest_26",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -6342,7 +6342,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Abyss_19",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -6486,7 +6486,7 @@
   {
     "id": "Dream Plant",
     "sceneName": "RestingGrounds_08",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -6576,7 +6576,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Waterways_04",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -7237,7 +7237,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Ruins2_Watcher_Room",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -8125,7 +8125,7 @@
   {
     "id": "Gate Switch",
     "sceneName": "Fungus3_40",
-    "activated": true,
+    "activated": false,
     "semiPersistent": false
   },
   {
@@ -8971,7 +8971,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Deepnest_East_18",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -9181,7 +9181,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Deepnest_East_07",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -9211,7 +9211,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "Deepnest_East_07",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -9463,7 +9463,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Ruins2_11",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -9957,7 +9957,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Mines_25",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -10505,7 +10505,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Deepnest_East_14",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -11123,7 +11123,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Fungus3_26",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -12066,7 +12066,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "Grimm_Main_Tent",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -12378,7 +12378,7 @@
   {
     "id": "Secret Mask",
     "sceneName": "GG_Lurker",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {
@@ -12390,7 +12390,7 @@
   {
     "id": "Secret Mask (1)",
     "sceneName": "GG_Lurker",
-    "activated": false,
+    "activated": true,
     "semiPersistent": false
   },
   {

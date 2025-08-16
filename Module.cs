@@ -19,7 +19,9 @@ internal abstract class Module
 
     public abstract string MenuDescription { get; }
 
-    public static bool RetainBosses { get; set; }
+    public static bool DisableEnemies { get; set; }
+    public static bool InvincibleBosses { get; set; }
+    public static bool DreamBossAccess { get; set; }
 
     #endregion
 

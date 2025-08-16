@@ -20,7 +20,7 @@ internal static class HealthControl
     static HealthControl()
     {
         ModHooks.AfterTakeDamageHook += ModHooks_AfterTakeDamageHook;
-        IL.PlayerData.MaxHealth += PlayerData_MaxHealth;
+        IL.PlayerData.MaxHealth += pd_MaxHealth;
         ModHooks.BeforeAddHealthHook += ModHooks_BeforeAddHealthHook;
         On.HeroController.MaxHealth += HeroController_MaxHealth;
         ModHooks.BlueHealthHook += ModHooks_BlueHealthHook;
@@ -99,7 +99,7 @@ internal static class HealthControl
         return damageAmount;
     }
 
-    private static void PlayerData_MaxHealth(ILContext il)
+    private static void pd_MaxHealth(ILContext il)
     {
         ILCursor cursor = new(il);
         cursor.Goto(0);
